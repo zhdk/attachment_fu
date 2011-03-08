@@ -242,7 +242,12 @@ module Technoweenie # :nodoc:
 
     module InstanceMethods
       def self.included(base)
-        base.define_callbacks *[:after_resize, :after_attachment_saved, :before_thumbnail_saved] if base.respond_to?(:define_callbacks)
+        if base.respond_to?(:define_callbacks)
+          base.class_eval do
+            define_callbacks :resize, :attachment_saved, :kind => :after
+            define_callbacks :thumbnail_saved, :kind => :before
+          end
+        end
       end
 
       # Checks whether the attachment's content type is an image content type

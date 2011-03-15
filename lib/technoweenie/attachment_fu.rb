@@ -1,3 +1,6 @@
+require 'technoweenie/attachment_fu/backends'
+require 'technoweenie/attachment_fu/processors'
+
 module Technoweenie # :nodoc:
   module AttachmentFu # :nodoc:
     @@default_processors = %w(ImageScience Rmagick MiniMagick Gd2 CoreImage)
@@ -128,6 +131,7 @@ module Technoweenie # :nodoc:
           begin
             if processors.any?
               attachment_options[:processor] = processors.first
+              require "attachment_fu/technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
               processor_mod = Technoweenie::AttachmentFu::Processors.const_get("#{attachment_options[:processor].to_s.classify}Processor")
               include processor_mod unless included_modules.include?(processor_mod)
             end
@@ -139,6 +143,7 @@ module Technoweenie # :nodoc:
           end
         else
           begin
+            require "attachment_fu/technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
             processor_mod = Technoweenie::AttachmentFu::Processors.const_get("#{attachment_options[:processor].to_s.classify}Processor")
             include processor_mod unless included_modules.include?(processor_mod)
           rescue Object, Exception

@@ -189,7 +189,8 @@ module Technoweenie # :nodoc:
         base.after_destroy :destroy_file
         base.after_validation :process_attachment
         if defined?(::ActiveSupport::Callbacks)
-          base.define_callbacks :after_resize, :before_thumbnail_saved
+          base.define_callbacks :resize, :kind => :after
+          base.define_callbacks :thumbnail_saved, :kind => :before
         end
       end
 

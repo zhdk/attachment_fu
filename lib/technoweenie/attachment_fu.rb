@@ -3,7 +3,7 @@ require 'technoweenie/attachment_fu/processors'
 
 module Technoweenie # :nodoc:
   module AttachmentFu # :nodoc:
-    @@default_processors = %w(ImageScience Rmagick MiniMagick Gd2 CoreImage)
+    @@default_processors = %w(image_science rmagick mini_magick gd2 core_image)
     @@tempfile_path      = File.join(RAILS_ROOT, 'tmp', 'attachment_fu')
     @@content_types      = [
       'image/jpeg',
@@ -131,11 +131,12 @@ module Technoweenie # :nodoc:
           begin
             if processors.any?
               attachment_options[:processor] = processors.first
-              require "attachment_fu/technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
+              require "technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
               processor_mod = Technoweenie::AttachmentFu::Processors.const_get("#{attachment_options[:processor].to_s.classify}Processor")
               include processor_mod unless included_modules.include?(processor_mod)
             end
           rescue Object, Exception
+            Rails.logger.debug("Error including processor #{processors.first}: #{$!.class.name}/#{$!.message}")
             raise unless load_related_exception?($!)
 
             processors.shift
@@ -143,7 +144,7 @@ module Technoweenie # :nodoc:
           end
         else
           begin
-            require "attachment_fu/technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
+            require "technoweenie/attachment_fu/processors/#{attachment_options[:processor].to_s}_processor"
             processor_mod = Technoweenie::AttachmentFu::Processors.const_get("#{attachment_options[:processor].to_s.classify}Processor")
             include processor_mod unless included_modules.include?(processor_mod)
           rescue Object, Exception
@@ -448,8 +449,15 @@ module Technoweenie # :nodoc:
 
         # Cleans up after processing.  Thumbnails are created, the attachment is stored to the backend, and the temp_paths are cleared.
         def after_process_attachment
+          Rails.logger.debug("after process attachment")
           if @saved_attachment
+            Rails.logger.debug("Saved attachment")
+            Rails.logger.debug respond_to?(:process_attachment_with_processing) 
+            Rails.logger.debug thumbnailable?
+            Rails.logger.debug !attachment_options[:thumbnails].blank?
+            Rails.logger.debug parent_id.nil?
             if respond_to?(:process_attachment_with_processing) && thumbnailable? && !attachment_options[:thumbnails].blank? && parent_id.nil?
+              Rails.logger.debug(" thumbnailing")
               temp_file = temp_path || create_temp_file
               attachment_options[:thumbnails].each { |suffix, size| create_or_update_thumbnail(temp_file, suffix, *size) }
             end

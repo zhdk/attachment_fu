@@ -136,7 +136,6 @@ module Technoweenie # :nodoc:
               include processor_mod unless included_modules.include?(processor_mod)
             end
           rescue Object, Exception
-            Rails.logger.debug("Error including processor #{processors.first}: #{$!.class.name}/#{$!.message}")
             raise unless load_related_exception?($!)
 
             processors.shift
